@@ -13,24 +13,35 @@ void App::init() {
    Serial.begin(115200);
    delay(1000);
 
-   Serial.println("App init");
+   //Serial.println("App init");
    display.init();
    changeState(AppState::Start);
+   delay(5000);
+   changeState(AppState::Work);
 }
 
 //runs when switching screens
 void App::changeState(AppState newState){
+
     state = newState;
 
     switch (state) {
-        case AppState::Start:
+        case AppState::Start: {
+            //startScreen.drawFullRefresh();
+            startScreen.draw();
             startScreen.draw();
             break;
-
-        case AppState::Work:
+        }
+           
+        case AppState::Work: {
+            const TimerOption& selected = startScreen.getSelectedOption();
+            workScreen.setTimerVals(selected.workMinutes, selected.breakMinutes);
+            workScreen.startTimer();
+            workScreen.drawFullRefresh();
             workScreen.draw();
             break;
-
+        }
+           
         case AppState::Break:
             break;
 
@@ -52,6 +63,7 @@ void App::update() {
 
         case AppState::Work:
             workScreen.update();
+            workScreen.draw();
             break;
 
         case AppState::Pause:

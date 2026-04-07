@@ -15,8 +15,8 @@ private:
 
     TimerOption options[3] = {
         {"Option 1", 25, 5},
-        {"Option 2", 45, 5},
-        {"Option 3", 15, 5}
+        {"Option 2", 45, 10},
+        {"Option 3", 60, 15}
     };
 
     int selectedIndex = 0;
@@ -26,4 +26,7 @@ public:
 
     void draw() override;
     void update() override;
+    void drawFullRefresh();
+
+    const TimerOption& getSelectedOption() const;
 };

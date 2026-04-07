@@ -24,8 +24,20 @@ void DisplayManager::clear() {
     } while (display.nextPage());
 }
 
-void DisplayManager::refresh() {
-    //Serial.println("Display refreshed");
+void DisplayManager::fullRefreshWorkScreen(const char* timeText, int selectedIndex, float progress) {
+    display.setFullWindow();
+    display.firstPage();
+    do {
+        drawWorkScreen(timeText, selectedIndex, progress);
+    } while (display.nextPage());
+}
+
+void DisplayManager::fullRefreshStartScreen(const char* labels[], int count, int selectedIndex) {
+    display.setFullWindow();
+    display.firstPage();
+    do {
+        drawStartOptions(labels, count, selectedIndex);
+    } while (display.nextPage());
 }
 
 void DisplayManager::drawCenteredText(const char* text) {
@@ -110,6 +122,84 @@ void DisplayManager::drawStartOptions(const char* labels[], int count, int selec
    
     }
     //change to false for quicker refresh
+    display.display(true);
+    
+    Serial.println("Done Drawing Start Screen");
+}
+
+void DisplayManager::drawWorkScreen(const char* timeText, int selectedIndex, float progress) {
+    display.fillScreen(GxEPD_WHITE);
+    int buttonY = 20;
+    int buttonW = 250;
+    int buttonH = 71;
+    int buttonX[3] = {12, 275, 538};
+    const char* buttons[3] = {"Pause", "Take Break", "Stop"};
+
+    display.setTextColor(GxEPD_BLACK);
+    display.setTextSize(3);
+
+    //BUTTONS AT TOP
+    for (int i = 0; i < 3; i++) {
+        int x = buttonX[i];
+        int y = buttonY;
+
+        display.fillRoundRect(x, y, buttonW, buttonH,12, GxEPD_WHITE);
+        
+        if (i == selectedIndex) {
+            // Thicker (double rounded border)
+            display.drawRoundRect(x, y, buttonW, buttonH, 12, GxEPD_BLACK);
+            display.drawRoundRect(x + 2, y + 2, buttonW - 4, buttonH - 4, 12, GxEPD_BLACK);
+        } else {
+            display.drawRoundRect(x, y, buttonW, buttonH, 12, GxEPD_BLACK);
+        }
+
+        int16_t tbx, tby;
+        uint16_t tbw, tbh;
+        display.getTextBounds(buttons[i], 0, 0, &tbx, &tby, &tbw, &tbh);
+
+        int textX = x + (buttonW - tbw) / 2;
+        int textY = y + (buttonH - tbh) / 2 - tby;;
+
+        display.setCursor(textX, textY);
+        display.print(buttons[i]);
+    }
+
+    //TEXT FOR TIME
+    display.setTextColor(GxEPD_BLACK);
+    display.setTextSize(6);
+
+    int16_t tbx, tby;
+    uint16_t tbw, tbh;
+    display.getTextBounds(timeText, 0, 0, &tbx, &tby, &tbw, &tbh);
+    int timeX = (display.width() - tbw) / 2;
+    int timeY = 163;
+    display.setCursor(timeX, timeY);
+    display.print(timeText);
+
+    //PROGRESS BAR
+    int barW = 460;
+    int barH = 30;
+    int barX = (display.width() - barW) / 2;
+    int barY = 255;
+    int radius = 15;
+
+    //outer bar
+    display.drawRoundRect(barX, barY, barW, barH, radius, GxEPD_BLACK);
+    //inside
+    display.fillRoundRect(barX + 1, barY + 1, barW - 2, barH - 2, radius, GxEPD_WHITE);
+
+    // filled portion
+    int fillW = (int)((barW - 2) * progress);
+    if (fillW > 0) {
+        display.fillRoundRect(barX + 1, barY + 1, fillW, barH - 2, radius, GxEPD_BLACK);
+    }
+
+    //BOTTOM SPRITE
+    int imgX = 35;
+    int imgY = 335;
+    display.drawBitmap(imgX, imgY,turtwigBitmapsprite_2_1_icon,
+                    TURTWIG_WIDTH, TURTWIG_HEIGHT, GxEPD_BLACK);
+
     display.display(true);
     
     Serial.println("Done Drawing Start Screen");
