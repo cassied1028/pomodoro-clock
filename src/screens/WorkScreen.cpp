@@ -10,9 +10,9 @@ void WorkScreen::draw() {
     display.drawWorkScreen(timeText, selectedIndex, progress);
 }
 
-void WorkScreen::drawFullRefresh() {
-    display.fullRefreshWorkScreen(timeText, selectedIndex, progress);
-}
+// void WorkScreen::drawFullRefresh() {
+//     display.fullRefreshWorkScreen(timeText, selectedIndex, progress);
+// }
 
 void WorkScreen::update() {
     timer.update();

@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include "App.h"
 
+static unsigned long startTime = millis();
+
 App::App() 
     : state(AppState::Start),
     display(),
@@ -12,12 +14,11 @@ App::App()
 void App::init() {
    Serial.begin(115200);
    delay(1000);
+    startTime = millis();
 
    //Serial.println("App init");
    display.init();
-   changeState(AppState::Start);
-   delay(5000);
-   changeState(AppState::Work);
+   changeState(AppState::Start);    
 }
 
 //runs when switching screens
@@ -29,7 +30,6 @@ void App::changeState(AppState newState){
         case AppState::Start: {
             //startScreen.drawFullRefresh();
             startScreen.draw();
-            startScreen.draw();
             break;
         }
            
@@ -37,7 +37,7 @@ void App::changeState(AppState newState){
             const TimerOption& selected = startScreen.getSelectedOption();
             workScreen.setTimerVals(selected.workMinutes, selected.breakMinutes);
             workScreen.startTimer();
-            workScreen.drawFullRefresh();
+            // workScreen.drawFullRefresh();
             workScreen.draw();
             break;
         }
@@ -59,6 +59,8 @@ void App::update() {
     switch (state) {
         case AppState::Start:
             startScreen.update();
+            if(millis() - startTime > 10000){
+                changeState(AppState::Work);}
             break;
 
         case AppState::Work:

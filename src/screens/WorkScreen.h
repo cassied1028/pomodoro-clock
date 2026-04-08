@@ -22,7 +22,7 @@ public:
     void draw() override;
     void update() override;
 
-    void drawFullRefresh();
+    // void drawFullRefresh();
     void setSelectedIndex(int index);
     void setProgress(float value);
     void setTimeText(const char* text);

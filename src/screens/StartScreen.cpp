@@ -22,6 +22,10 @@ void StartScreen::draw() {
 
 void StartScreen::update() {
     // nothing yet
+    // if(selectedIndex changes{
+    //     selectedIndex = newIndex;
+    //     draw();
+    // }
 }
 
 void StartScreen::drawFullRefresh() {
