@@ -1,10 +1,10 @@
 //This file sets the initial state and controls the behavior of the app
 #include <Arduino.h>
 #include "App.h"
+#include "Stats.h"
 
 static unsigned long startTime = 0;
-bool cyclePressedEvent = false;
-bool selectPressedEvent = false;
+
 
 App::App() 
     : state(AppState::Start),
@@ -39,10 +39,13 @@ void App::changeState(AppState newState){
         }
            
         case AppState::Work: {
-            const TimerOption& selected = startScreen.getSelectedOption();
-            workScreen.setTimerVals(selected.workMinutes, selected.breakMinutes);
-            workScreen.startTimer();
-            // workScreen.drawFullRefresh();
+            // const TimerOption& selected = startScreen.getSelectedOption();
+            // workScreen.setTimerVals(selected.workMinutes, selected.breakMinutes);
+            // workScreen.setSpriteIndex(startScreen.getSpriteIndex());
+            // Serial.println(startScreen.getSpriteIndex());
+            // workScreen.startTimer();
+            // stats.startSession(false);
+            // // workScreen.drawFullRefresh();
             workScreen.draw();
             break;
         }
@@ -51,6 +54,7 @@ void App::changeState(AppState newState){
             break;
 
         case AppState::Pause:
+            stats.pauseSession();
             pauseScreen.draw(); 
             break;
 
@@ -63,7 +67,7 @@ void App::changeState(AppState newState){
 void App::update() {
     bool cycleButtonPress = digitalRead(14) == LOW;
     bool selectButtonPress = digitalRead(12) == LOW;
-
+    stats.update();
     //making buttons sticky
     if (cycleButtonPress && !lastCycleState) {
         cyclePressedEvent = true;
@@ -78,32 +82,72 @@ void App::update() {
             
             if(cyclePressedEvent){
                 startScreen.nextOption();
-                Serial.println("cycle button pressed");}
-                cyclePressedEvent = false;
-            if(selectPressedEvent && !lastSelectState){
-                Serial.println("select button pressed");
+                cyclePressedEvent = false;}
+            if(selectPressedEvent){
+                const TimerOption& selected = startScreen.getSelectedOption();
+                workScreen.setTimerVals(selected.workMinutes, selected.breakMinutes);
+                workScreen.setSpriteIndex(startScreen.getSpriteIndex());
+                workScreen.startTimer();
+                stats.startSession(false);
                 selectPressedEvent = false;
-                changeState(AppState::Work);}
-                
-            // if(millis() - startTime > 10000){
-            //     changeState(AppState::Work);}
-            startScreen.update();
+                changeState(AppState::Work);
+            }
+            //startScreen.update();
             break;
 
         case AppState::Work:
             if(cyclePressedEvent){
                 workScreen.nextOption();
                 cyclePressedEvent = false;
-                Serial.println("cycle button pressed");}
-            if(selectPressedEvent && workScreen.getSelectedIndex() == 2){
-                Serial.println("select button pressed");
+                }
+            if(selectPressedEvent){
+                if(workScreen.getSelectedIndex() == 0){
+                    pauseScreen.setPausedMinutesRemaining((workScreen.getSeconds()+59) / 60);
+                    Serial.print("Work Today: ");
+                    Serial.print(stats.getWorkToday());
+                    Serial.print("s | Break Today: ");
+                    Serial.print(stats.getBreakToday());
+                    Serial.print("s | Session: ");
+                    Serial.print(stats.getSessionTime());
+                    Serial.println("s");
+                    pauseScreen.setStats(
+                        stats.getWorkToday(),
+                        stats.getBreakToday(),
+                        stats.getSessionTime()
+                    );                    
+                    changeState(AppState::Pause);
+                }else if (workScreen.getSelectedIndex() == 1){
+                    if(workScreen.isOnBreak()){
+                        stats.startSession(false);
+                        workScreen.startTimer();
+                    }else{
+                        stats.startSession(true);
+                        workScreen.startBreakTimer();
+                    }
+                    
+                }else if(workScreen.getSelectedIndex() ==2){
+                    changeState(AppState::Start);
+                }
                 selectPressedEvent = false;
-                changeState(AppState::Start);}
+            }
             workScreen.update();
 
             break;
 
         case AppState::Pause:
+            if(cyclePressedEvent){
+                pauseScreen.nextOption();
+                cyclePressedEvent = false;
+            }
+            if(selectPressedEvent){
+                if(pauseScreen.getSelectedIndex() == 0){
+                    stats.resumeSession();
+                    changeState(AppState::Work);
+                }else if (pauseScreen.getSelectedIndex() == 2){
+                    changeState(AppState::Start);
+                }
+                selectPressedEvent = false;
+            }
             pauseScreen.update();
             break;
 

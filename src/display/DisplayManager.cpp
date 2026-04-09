@@ -24,13 +24,13 @@ void DisplayManager::clear() {
     } while (display.nextPage());
 }
 
-void DisplayManager::fullRefreshWorkScreen(const char* timeText, int selectedIndex, float progress) {
-    display.setFullWindow();
-    display.firstPage();
-    do {
-        drawWorkScreen(timeText, selectedIndex, progress);
-    } while (display.nextPage());
-}
+// void DisplayManager::fullRefreshWorkScreen(const char* timeText, int selectedIndex, float progress) {
+//     display.setFullWindow();
+//     display.firstPage();
+//     do {
+//         drawWorkScreen(timeText, selectedIndex, progress);
+//     } while (display.nextPage());
+// }
 
 void DisplayManager::fullRefreshStartScreen(const char* labels[], int count, int selectedIndex) {
     display.setFullWindow();
@@ -125,13 +125,14 @@ void DisplayManager::drawStartOptions(const char* labels[], int count, int selec
     Serial.println("Done Drawing Start Screen");
 }
 
-void DisplayManager::drawWorkScreen(const char* timeText, int selectedIndex, float progress) {
+void DisplayManager::drawWorkScreen(const char* timeText, int selectedIndex, float progress, int spriteIndex, bool isOnBreak) {
     display.fillScreen(GxEPD_WHITE);
     int buttonY = 20;
     int buttonW = 250;
     int buttonH = 71;
     int buttonX[3] = {12, 275, 538};
     const char* buttons[3] = {"Pause", "Take Break", "Stop"};
+    if(isOnBreak){buttons[1] = "Start Work";}
 
     display.setTextColor(GxEPD_BLACK);
     display.setTextSize(3);
@@ -195,10 +196,119 @@ void DisplayManager::drawWorkScreen(const char* timeText, int selectedIndex, flo
     //BOTTOM SPRITE
     int imgX = 35;
     int imgY = 335;
-    display.drawBitmap(imgX, imgY,turtwigBitmapsprite_2_1_icon,
-                    TURTWIG_WIDTH, TURTWIG_HEIGHT, GxEPD_BLACK);
+    // display.drawBitmap(imgX, imgY,turtwigBitmapsprite_2_1_icon,
+    //                 TURTWIG_WIDTH, TURTWIG_HEIGHT, GxEPD_BLACK);
+    if(spriteIndex == 0){
+        display.fillRect(imgX, imgY, TURTWIG_WIDTH, TURTWIG_HEIGHT, GxEPD_WHITE);
+        display.drawBitmap(imgX, imgY,turtwigBitmapsprite_2_1_icon,
+                TURTWIG_WIDTH, TURTWIG_HEIGHT, GxEPD_BLACK);
+    }
+    else if(spriteIndex == 1){
+        display.fillRect(imgX, imgY, PIPLUP_WIDTH, PIPLUP_HEIGHT, GxEPD_WHITE);
+        display.drawBitmap(imgX, imgY,piplupBitmapsprite_2_19_icon,
+                PIPLUP_WIDTH, PIPLUP_HEIGHT, GxEPD_BLACK);
+    }else{
+        display.fillRect(imgX, imgY, CHIMCHAR_WIDTH, CHIMCHAR_HEIGHT, GxEPD_WHITE);
+        display.drawBitmap(imgX, imgY,chimcharBitmapsprite_2_10_icon,
+                CHIMCHAR_WIDTH, CHIMCHAR_HEIGHT, GxEPD_BLACK);
+    }
 
     display.display(true);
     
     Serial.println("Done Drawing Work Screen");
+}
+
+void DisplayManager::drawPauseScreen(int selectedIndex, int pausedMinutesRemaining,
+                                     int workTodayMinutes, int breakTodayMinutes, int sessionMinutes) {
+    display.fillScreen(GxEPD_WHITE);
+           
+    int buttonY = 20;
+    int buttonW = 250;
+    int buttonH = 71;
+    int buttonX[3] = {12, 275, 538};
+    const char* buttons[3] = {"Resume", "", "Stop"};
+
+    display.setTextColor(GxEPD_BLACK);
+    display.setTextSize(3);  
+
+    //drawing buttons
+    for (int i = 0; i < 3; i++) {
+        if (i == 1) continue;
+        int x = buttonX[i];
+        int y = buttonY;
+        display.fillRoundRect(x, y, buttonW, buttonH,12, GxEPD_WHITE);
+        
+        if (i == selectedIndex) {
+            display.drawRoundRect(x, y, buttonW, buttonH, 12, GxEPD_BLACK);
+            display.drawRoundRect(x + 2, y + 2, buttonW - 4, buttonH - 4, 12, GxEPD_BLACK);
+        } else {
+            display.drawRoundRect(x, y, buttonW, buttonH, 12, GxEPD_BLACK);
+        }
+
+        int16_t tbx, tby;
+        uint16_t tbw, tbh;
+        display.getTextBounds(buttons[i], 0, 0, &tbx, &tby, &tbw, &tbh);
+
+        int textX = x + (buttonW - tbw) / 2;
+        int textY = y + (buttonH - tbh) / 2 - tby;;
+
+        display.setCursor(textX, textY);
+        display.print(buttons[i]);
+    }
+
+    // CENTER STATS BOX
+    int boxW = 400;
+    int boxH = 220;
+    int boxX = (display.width() - boxW) / 2;
+    int boxY = 140;
+
+    display.drawRect(boxX, boxY, boxW, boxH, GxEPD_BLACK);
+
+    display.setTextSize(2);
+
+    int leftX = boxX + 20;
+    int rightX = boxX + boxW - 110;
+
+    display.setCursor(leftX, boxY + 45);
+    display.print("Work time today");
+    display.setCursor(rightX, boxY + 45);
+    display.print(workTodayMinutes / 60);
+    display.print("m ");
+    display.print(workTodayMinutes % 60);
+    display.print("s");
+
+    display.setCursor(leftX, boxY + 105);
+    display.print("Break time today");
+    display.setCursor(rightX, boxY + 105);
+    display.print(breakTodayMinutes / 60);
+    display.print("m ");
+    display.print(breakTodayMinutes % 60);
+    display.print("s");
+
+    display.setCursor(leftX, boxY + 165);
+    display.print("Session time");
+    display.setCursor(rightX, boxY + 165);
+    display.print(sessionMinutes / 60);
+    display.print("m ");
+    display.print(sessionMinutes % 60);
+    display.print("s");
+
+    // BOTTOM STATUS TEXT
+    char pauseText[40];
+    snprintf(pauseText, sizeof(pauseText), "Paused - %d mins remain", pausedMinutesRemaining);
+
+    display.setTextSize(4);
+
+    int16_t tbx, tby;
+    uint16_t tbw, tbh;
+    display.getTextBounds(pauseText, 0, 0, &tbx, &tby, &tbw, &tbh);
+
+    int textX = (display.width() - tbw) / 2;
+    int textY = 430;
+
+    display.setCursor(textX, textY);
+    display.print(pauseText);
+
+    display.display(true);
+
 }

@@ -46,3 +46,7 @@ void StartScreen::drawFullRefresh() {
 const TimerOption& StartScreen::getSelectedOption() const {
     return options[selectedIndex];
 }
+
+int StartScreen::getSpriteIndex(){
+    return selectedIndex;
+}

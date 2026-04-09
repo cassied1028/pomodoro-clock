@@ -12,7 +12,9 @@ public:
 
     void drawCenteredText(const char* text);
     void drawStartOptions(const char* labels[], int count, int selectedIndex);
-    void drawWorkScreen(const char* timeText, int selectedIndex, float progress);
-    void fullRefreshWorkScreen(const char* timeText, int selectedIndex, float progress);
+    void drawWorkScreen(const char* timeText, int selectedIndex, float progress, int spriteIndex, bool isOnBreak);
+    //void fullRefreshWorkScreen(const char* timeText, int selectedIndex, float progress);
     void fullRefreshStartScreen(const char* labels[], int count, int selectedIndex);
+    void drawPauseScreen(int selectedIndex, int pausedMinutesRemaining,
+                     int workTodayMinutes, int breakTodayMinutes, int sessionMinutes);
 };

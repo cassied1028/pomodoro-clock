@@ -13,8 +13,9 @@ class StartScreen : public Screen {
 private:
     DisplayManager& display;
 
+    //CHANGE WORKING TIMES HERE
     TimerOption options[3] = {
-        {"Option 1", 25, 5},
+        {"Option 1", 1, 1},
         {"Option 2", 45, 10},
         {"Option 3", 60, 15}
     };
@@ -28,6 +29,7 @@ public:
     void update() override;
     void nextOption();
     void drawFullRefresh();
+    int getSpriteIndex();
 
     const TimerOption& getSelectedOption() const;
 };

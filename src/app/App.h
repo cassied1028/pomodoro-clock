@@ -6,6 +6,7 @@
 #include "screens/StartScreen.h"
 #include "screens/WorkScreen.h"
 #include "screens/PauseScreen.h"
+#include "Stats.h"
 
 class App {
 private:
@@ -15,9 +16,12 @@ private:
     StartScreen startScreen;
     WorkScreen workScreen;
     PauseScreen pauseScreen;
+    Stats stats;
     bool lastCycleState = false;
     bool lastSelectState = false;
-
+    bool cyclePressedEvent = false;
+    bool selectPressedEvent = false;
+    
     void changeState(AppState newState);
 
 public:
