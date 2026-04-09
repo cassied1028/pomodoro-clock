@@ -2,7 +2,9 @@
 #include <Arduino.h>
 #include "App.h"
 
-static unsigned long startTime = millis();
+static unsigned long startTime = 0;
+bool cyclePressedEvent = false;
+bool selectPressedEvent = false;
 
 App::App() 
     : state(AppState::Start),
@@ -14,10 +16,13 @@ App::App()
 void App::init() {
    Serial.begin(115200);
    delay(1000);
-    startTime = millis();
+   startTime = millis();
+   pinMode(14, INPUT_PULLUP);
+   pinMode(12, INPUT_PULLUP);
 
    //Serial.println("App init");
    display.init();
+   startScreen.drawFullRefresh();
    changeState(AppState::Start);    
 }
 
@@ -56,16 +61,46 @@ void App::changeState(AppState newState){
 
 //continuosly runs and checks what state to be in currently
 void App::update() {
+    bool cycleButtonPress = digitalRead(14) == LOW;
+    bool selectButtonPress = digitalRead(12) == LOW;
+
+    //making buttons sticky
+    if (cycleButtonPress && !lastCycleState) {
+        cyclePressedEvent = true;
+    }
+
+    if (selectButtonPress && !lastSelectState) {
+        selectPressedEvent = true;
+    }
+
     switch (state) {
         case AppState::Start:
-            startScreen.update();
-            if(millis() - startTime > 10000){
+            
+            if(cyclePressedEvent){
+                startScreen.nextOption();
+                Serial.println("cycle button pressed");}
+                cyclePressedEvent = false;
+            if(selectPressedEvent && !lastSelectState){
+                Serial.println("select button pressed");
+                selectPressedEvent = false;
                 changeState(AppState::Work);}
+                
+            // if(millis() - startTime > 10000){
+            //     changeState(AppState::Work);}
+            startScreen.update();
             break;
 
         case AppState::Work:
+            if(cyclePressedEvent){
+                workScreen.nextOption();
+                cyclePressedEvent = false;
+                Serial.println("cycle button pressed");}
+            if(selectPressedEvent && workScreen.getSelectedIndex() == 2){
+                Serial.println("select button pressed");
+                selectPressedEvent = false;
+                changeState(AppState::Start);}
             workScreen.update();
-            workScreen.draw();
+
             break;
 
         case AppState::Pause:
@@ -78,4 +113,6 @@ void App::update() {
         case AppState::End:
             break;
     }
+    lastCycleState = cycleButtonPress;
+    lastSelectState = selectButtonPress;
 }

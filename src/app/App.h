@@ -15,6 +15,8 @@ private:
     StartScreen startScreen;
     WorkScreen workScreen;
     PauseScreen pauseScreen;
+    bool lastCycleState = false;
+    bool lastSelectState = false;
 
     void changeState(AppState newState);
 

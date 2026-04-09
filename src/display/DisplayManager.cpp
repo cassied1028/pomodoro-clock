@@ -34,10 +34,8 @@ void DisplayManager::fullRefreshWorkScreen(const char* timeText, int selectedInd
 
 void DisplayManager::fullRefreshStartScreen(const char* labels[], int count, int selectedIndex) {
     display.setFullWindow();
-    display.firstPage();
-    do {
-        drawStartOptions(labels, count, selectedIndex);
-    } while (display.nextPage());
+    display.display(true);
+    drawStartOptions(labels, count, selectedIndex);
 }
 
 void DisplayManager::drawCenteredText(const char* text) {
@@ -202,5 +200,5 @@ void DisplayManager::drawWorkScreen(const char* timeText, int selectedIndex, flo
 
     display.display(true);
     
-    Serial.println("Done Drawing Start Screen");
+    Serial.println("Done Drawing Work Screen");
 }

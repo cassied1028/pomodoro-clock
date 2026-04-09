@@ -3,7 +3,7 @@
 #include "stdio.h"
 
 WorkScreen::WorkScreen(DisplayManager& displayRef)
-    : display(displayRef), selectedIndex(0), progress(0.12), timeText("25 mins") {}
+    : display(displayRef), selectedIndex(0), progress(0.12), timeText("25 mins"), lastDisplayedMinute(-1) {}
 
 void WorkScreen::draw() {
     //Serial.println("Drawing Work Screen");
@@ -21,12 +21,29 @@ void WorkScreen::update() {
     int minutes = remaining / 60;
     int seconds = remaining % 60;
     
-    sprintf(timeText, "%d:%02d", minutes, seconds);
+    sprintf(timeText, "%d mins", minutes, seconds);
     progress = timer.getProgress();
+    if (minutes != lastDisplayedMinute) {
+        lastDisplayedMinute = minutes;
+        draw();
+    }
+}
+
+int WorkScreen::getSeconds(){
+    return timer.getRemainingSeconds();
 }
 
 void WorkScreen::setSelectedIndex(int index) {
     selectedIndex = index;
+}
+
+int WorkScreen::getSelectedIndex() {
+    return selectedIndex;
+}
+
+void WorkScreen::nextOption() {
+    selectedIndex = (selectedIndex + 1) % 3;
+    draw();
 }
 
 void WorkScreen::setProgress(float value) {
@@ -44,10 +61,11 @@ void WorkScreen::setTimerVals(int work, int rest) {
     workMins = work;
     breakMins = rest;
 
-    snprintf(timeText, sizeof(timeText), "%d:00", workMins);
+    snprintf(timeText, sizeof(timeText), "%d mins", workMins);
     progress = 0.0f;
 }
 
 void WorkScreen::startTimer() {
+    lastDisplayedMinute = -1;
     timer.start(workMins * 60);
 }

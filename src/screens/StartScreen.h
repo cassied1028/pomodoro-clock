@@ -26,6 +26,7 @@ public:
 
     void draw() override;
     void update() override;
+    void nextOption();
     void drawFullRefresh();
 
     const TimerOption& getSelectedOption() const;

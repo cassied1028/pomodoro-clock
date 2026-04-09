@@ -13,8 +13,9 @@ private:
     int breakMins = 5;
     int selectedIndex = 0;
     float progress = 0.0f;
+    int lastDisplayedMinute = -1;
     //const char* timeText = "25 minutes";
-    char timeText[20] = "25:00";
+    char timeText[20] = "25 mins";
 
 public:
     WorkScreen(DisplayManager& displayRef);
@@ -27,6 +28,9 @@ public:
     void setProgress(float value);
     void setTimeText(const char* text);
     void setTimerVals(int work, int rest);
+    void nextOption();
+    int getSelectedIndex();
+    int getSeconds();
 
     void startTimer();
 };

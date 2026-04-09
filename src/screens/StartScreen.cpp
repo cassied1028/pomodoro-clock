@@ -21,25 +21,26 @@ void StartScreen::draw() {
 }
 
 void StartScreen::update() {
-    // nothing yet
-    // if(selectedIndex changes{
-    //     selectedIndex = newIndex;
-    //     draw();
-    // }
+    // selectedIndex = newIndex;
+    // draw();
+}
+
+void StartScreen::nextOption() {
+    selectedIndex = (selectedIndex + 1) % 3;
+    draw();
 }
 
 void StartScreen::drawFullRefresh() {
     const char* labels[3];
-    static char labelBuffers[3][16];
-
+    static char labelBuffers[3][16]; // holds formatted strings
     for (int i = 0; i < 3; i++) {
         sprintf(labelBuffers[i], "%d / %d",
                 options[i].workMinutes,
                 options[i].breakMinutes);
+
         labels[i] = labelBuffers[i];
     }
-
-    display.fullRefreshStartScreen(labels, 3, selectedIndex);
+    display.fullRefreshStartScreen(labels, 3 , selectedIndex);
 }
 
 const TimerOption& StartScreen::getSelectedOption() const {
