@@ -30,6 +30,11 @@ void StartScreen::nextOption() {
     draw();
 }
 
+void StartScreen::prevOption(){
+    selectedIndex = (selectedIndex - 1 + 3) % 3;
+    draw();
+}
+
 void StartScreen::drawFullRefresh() {
     const char* labels[3];
     static char labelBuffers[3][16]; // holds formatted strings

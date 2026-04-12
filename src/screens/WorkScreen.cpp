@@ -60,6 +60,11 @@ void WorkScreen::nextOption() {
     draw();
 }
 
+void WorkScreen::prevOption(){
+    selectedIndex = (selectedIndex - 1 + 3) % 3;
+    draw();
+}
+
 void WorkScreen::setProgress(float value) {
     if (value < 0.0f) value = 0.0f;
     if (value > 1.0f) value = 1.0f;

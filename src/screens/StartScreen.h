@@ -15,7 +15,7 @@ private:
 
     //CHANGE WORKING TIMES HERE
     TimerOption options[3] = {
-        {"Option 1", 1, 1},
+        {"Option 1", 5, 5},
         {"Option 2", 45, 10},
         {"Option 3", 60, 15}
     };
@@ -28,6 +28,7 @@ public:
     void draw() override;
     void update() override;
     void nextOption();
+    void prevOption();
     void drawFullRefresh();
     int getSpriteIndex();
 

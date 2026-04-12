@@ -9,11 +9,20 @@ static unsigned long startTime = 0;
 const int RED_PIN = 13;
 const int GREEN_PIN = 12;
 const int BLUE_PIN = 14;
-
 // PWM channels
 const int RED_CH = 0;
 const int GREEN_CH = 1;
 const int BLUE_CH = 2;
+
+// Rotary encoder pins
+const int ENC_CLK = 27;
+const int ENC_DT  = 26;
+const int ENC_SW  = 25;
+// Encoder state
+bool nextEvent = false;
+bool prevEvent = false;
+int lastClkState = HIGH;
+bool lastSwState = HIGH;
 
 void setColor(int r, int g, int b) {
     ledcWrite(RED_CH, r);
@@ -41,8 +50,13 @@ void App::init() {
    ledcAttachPin(GREEN_PIN, GREEN_CH);
    ledcAttachPin(BLUE_PIN, BLUE_CH);
    setColor(0, 0, 0); // start off
-   pinMode(26, INPUT_PULLUP);
-   pinMode(27, INPUT_PULLUP);
+
+    // Rotary encoder setup
+   pinMode(ENC_CLK, INPUT_PULLUP);
+   pinMode(ENC_DT, INPUT_PULLUP);
+   pinMode(ENC_SW, INPUT_PULLUP);
+   lastClkState = digitalRead(ENC_CLK);
+   lastSwState = digitalRead(ENC_SW);
 
    //Serial.println("App init");
    display.init();
@@ -86,24 +100,37 @@ void App::changeState(AppState newState){
 
 //continuosly runs and checks what state to be in currently
 void App::update() {
-    bool cycleButtonPress = digitalRead(26) == LOW;
-    bool selectButtonPress = digitalRead(27) == LOW;
     stats.update();
-    //making buttons sticky
-    if (cycleButtonPress && !lastCycleState) {
-        cyclePressedEvent = true;
-    }
+    // --- Rotary movement detection ---
+    int clkState = digitalRead(ENC_CLK);
 
-    if (selectButtonPress && !lastSelectState) {
+    if (clkState != lastClkState && clkState == LOW) {
+        if (digitalRead(ENC_DT) != clkState) {
+            nextEvent = true;   // clockwise
+        } else {
+            prevEvent = true;   // counterclockwise
+        }
+    }
+    lastClkState = clkState;
+
+    // --- Encoder button press detection ---
+    bool swState = digitalRead(ENC_SW);
+
+    if (swState == LOW && lastSwState == HIGH) {
         selectPressedEvent = true;
     }
+    lastSwState = swState;
 
     switch (state) {
         case AppState::Start:
              setColor(0, 0, 0);
-            if(cyclePressedEvent){
+            if(nextEvent){
                 startScreen.nextOption();
-                cyclePressedEvent = false;}
+                nextEvent = false;}
+            if(prevEvent){
+                startScreen.prevOption();
+                prevEvent = false;
+            }
             if(selectPressedEvent){
                 const TimerOption& selected = startScreen.getSelectedOption();
                 workScreen.setTimerVals(selected.workMinutes, selected.breakMinutes);
@@ -117,10 +144,13 @@ void App::update() {
             break;
 
         case AppState::Work:
-            if(cyclePressedEvent){
+            if(nextEvent){
                 workScreen.nextOption();
-                cyclePressedEvent = false;
-                }
+                nextEvent = false;}
+            if(prevEvent){
+                workScreen.prevOption();
+                prevEvent = false;
+            }
             if(selectPressedEvent){
                 if(workScreen.getSelectedIndex() == 0){
                     pauseScreen.setPausedMinutesRemaining((workScreen.getSeconds()+59) / 60);
@@ -162,10 +192,15 @@ void App::update() {
             break;
 
         case AppState::Pause:
-            if(cyclePressedEvent){
+            if(nextEvent){
                 pauseScreen.nextOption();
-                cyclePressedEvent = false;
+                nextEvent = false;
             }
+            if(prevEvent){
+                pauseScreen.nextOption();
+                prevEvent = false;
+            }
+
             if(selectPressedEvent){
                 if(pauseScreen.getSelectedIndex() == 0){
                     stats.resumeSession();
@@ -185,6 +220,4 @@ void App::update() {
         case AppState::End:
             break;
     }
-    lastCycleState = cycleButtonPress;
-    lastSelectState = selectButtonPress;
 }

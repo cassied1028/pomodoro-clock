@@ -34,6 +34,7 @@ public:
     void setTimeText(const char* text);
     void setTimerVals(int work, int rest);
     void nextOption();
+    void prevOption();
     int getSelectedIndex();
     int getSeconds();
 
