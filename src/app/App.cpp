@@ -5,6 +5,21 @@
 
 static unsigned long startTime = 0;
 
+// RGB LED pins
+const int RED_PIN = 13;
+const int GREEN_PIN = 12;
+const int BLUE_PIN = 14;
+
+// PWM channels
+const int RED_CH = 0;
+const int GREEN_CH = 1;
+const int BLUE_CH = 2;
+
+void setColor(int r, int g, int b) {
+    ledcWrite(RED_CH, r);
+    ledcWrite(GREEN_CH, g);
+    ledcWrite(BLUE_CH, b);
+}
 
 App::App() 
     : state(AppState::Start),
@@ -17,8 +32,17 @@ void App::init() {
    Serial.begin(115200);
    delay(1000);
    startTime = millis();
-   pinMode(14, INPUT_PULLUP);
-   pinMode(12, INPUT_PULLUP);
+
+    // RGB LED setup
+   ledcSetup(RED_CH, 5000, 8);
+   ledcSetup(GREEN_CH, 5000, 8);
+   ledcSetup(BLUE_CH, 5000, 8);
+   ledcAttachPin(RED_PIN, RED_CH);
+   ledcAttachPin(GREEN_PIN, GREEN_CH);
+   ledcAttachPin(BLUE_PIN, BLUE_CH);
+   setColor(0, 0, 0); // start off
+   pinMode(26, INPUT_PULLUP);
+   pinMode(27, INPUT_PULLUP);
 
    //Serial.println("App init");
    display.init();
@@ -34,39 +58,36 @@ void App::changeState(AppState newState){
     switch (state) {
         case AppState::Start: {
             //startScreen.drawFullRefresh();
+            setColor(0, 0, 0);
             startScreen.draw();
             break;
         }
            
         case AppState::Work: {
-            // const TimerOption& selected = startScreen.getSelectedOption();
-            // workScreen.setTimerVals(selected.workMinutes, selected.breakMinutes);
-            // workScreen.setSpriteIndex(startScreen.getSpriteIndex());
-            // Serial.println(startScreen.getSpriteIndex());
-            // workScreen.startTimer();
-            // stats.startSession(false);
-            // // workScreen.drawFullRefresh();
             workScreen.draw();
             break;
         }
            
         case AppState::Break:
+            setColor(0, 255, 0);
             break;
 
         case AppState::Pause:
+            setColor(0, 0, 255);
             stats.pauseSession();
             pauseScreen.draw(); 
             break;
 
         case AppState::End:
+            setColor(0, 0, 0);    
             break;
     }
 }
 
 //continuosly runs and checks what state to be in currently
 void App::update() {
-    bool cycleButtonPress = digitalRead(14) == LOW;
-    bool selectButtonPress = digitalRead(12) == LOW;
+    bool cycleButtonPress = digitalRead(26) == LOW;
+    bool selectButtonPress = digitalRead(27) == LOW;
     stats.update();
     //making buttons sticky
     if (cycleButtonPress && !lastCycleState) {
@@ -79,7 +100,7 @@ void App::update() {
 
     switch (state) {
         case AppState::Start:
-            
+             setColor(0, 0, 0);
             if(cyclePressedEvent){
                 startScreen.nextOption();
                 cyclePressedEvent = false;}
@@ -118,9 +139,11 @@ void App::update() {
                     changeState(AppState::Pause);
                 }else if (workScreen.getSelectedIndex() == 1){
                     if(workScreen.isOnBreak()){
+                        setColor(255,0, 0);
                         stats.startSession(false);
                         workScreen.startTimer();
                     }else{
+                        setColor(0, 255, 0);
                         stats.startSession(true);
                         workScreen.startBreakTimer();
                     }
@@ -130,6 +153,10 @@ void App::update() {
                 }
                 selectPressedEvent = false;
             }
+
+            if(workScreen.isOnBreak()){setColor(0,255, 0);
+            }else{setColor(255,0, 0);}
+
             workScreen.update();
 
             break;
@@ -148,6 +175,7 @@ void App::update() {
                 }
                 selectPressedEvent = false;
             }
+            setColor(0,0,255);
             pauseScreen.update();
             break;
 
